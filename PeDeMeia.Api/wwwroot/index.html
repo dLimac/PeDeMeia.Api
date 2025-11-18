@@ -1,0 +1,638 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pé de Meia - Controle Financeiro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #667eea;
+            padding: 2rem 1rem;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            color: white;
+        }
+
+        .logo-img {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .menu-item {
+            padding: 1rem 1.5rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            color: white;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+            .menu-item:hover, .menu-item.active {
+                background: rgba(255, 255, 255, 0.2);
+            }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+            .header h2 {
+                color: white;
+                font-size: 2rem;
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }
+
+        .btn-add {
+            background: #4c6ef5;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.3s;
+        }
+
+            .btn-add:hover {
+                background: #3b5bdb;
+            }
+
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            background: #e9ecef;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .card-info h3 {
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+
+        .card-info p {
+            color: #868e96;
+            font-size: 0.9rem;
+        }
+
+        .card-label {
+            color: #868e96;
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .card-value {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+            .card-value.positive {
+                color: #51cf66;
+            }
+
+            .card-value.negative {
+                color: #ff6b6b;
+            }
+
+        .card-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .btn-edit {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+            .btn-edit:hover {
+                background: #dee2e6;
+            }
+
+        .btn-delete {
+            background: #ffe0e0;
+            color: #ff6b6b;
+            border: 1px solid #ff6b6b;
+        }
+
+            .btn-delete:hover {
+                background: #ff6b6b;
+                color: white;
+            }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .modal.active {
+                display: flex;
+            }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+            .modal-header h3 {
+                font-size: 1.5rem;
+                color: #333;
+            }
+
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #868e96;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+            .form-group label {
+                display: block;
+                margin-bottom: 0.5rem;
+                color: #495057;
+                font-weight: 500;
+            }
+
+            .form-group input,
+            .form-group select {
+                width: 100%;
+                padding: 0.75rem;
+                border: 1px solid #ced4da;
+                border-radius: 6px;
+                font-size: 1rem;
+            }
+
+                .form-group input:focus,
+                .form-group select:focus {
+                    outline: none;
+                    border-color: #4c6ef5;
+                }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn-submit {
+            flex: 1;
+            background: #4c6ef5;
+            color: white;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+            .btn-submit:hover {
+                background: #3b5bdb;
+            }
+
+        .btn-cancel {
+            flex: 1;
+            background: #e9ecef;
+            color: #495057;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+            .btn-cancel:hover {
+                background: #dee2e6;
+            }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: white;
+        }
+
+            .empty-state h3 {
+                font-size: 1.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .empty-state p {
+                opacity: 0.8;
+            }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-img">🧦</div>
+            <h1>Pé de Meia</h1>
+        </div>
+        <div class="menu-item active" onclick="changeView('contas')">
+            🏦 Contas Bancárias
+        </div>
+        <div class="menu-item" onclick="changeView('cartoes')">
+            💳 Cartões
+        </div>
+        <div class="menu-item" onclick="changeView('poupanca')">
+            💰 Poupança
+        </div>
+        <div class="menu-item" onclick="changeView('receitas')">
+            📈 Receitas
+        </div>
+        <div class="menu-item" onclick="changeView('despesas')">
+            📉 Despesas
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2 id="pageTitle">🏦 Contas Bancárias</h2>
+            <button class="btn-add" onclick="openModal()">
+                <span>+</span>
+                <span id="btnAddText">Adicionar Nova Conta</span>
+            </button>
+        </div>
+
+        <div id="cardsContainer" class="cards-container"></div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Nova Conta</h3>
+                <button class="btn-close" onclick="closeModal()">×</button>
+            </div>
+            <form id="mainForm" onsubmit="handleSubmit(event)">
+                <div id="formFields"></div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn-submit">Salvar</button>
+            </form>
+        </div>
+    </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://pisenac.runasp.net/'; // Ajuste conforme sua API
+        let currentView = 'contas';
+        let editingId = null;
+        let contas = [];
+        let cartoes = [];
+        let poupancas = [];
+        let receitas = [];
+        let despesas = [];
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+        });
+
+        async function loadData() {
+            try {
+                const [receitasRes, despesasRes] = await Promise.all([
+                    fetch(`${API_URL}/receitas`),
+                    fetch(`${API_URL}/despesas`)
+                ]);
+
+                receitas = await receitasRes.json();
+                despesas = await despesasRes.json();
+
+                renderCards();
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                // Usar dados de exemplo se a API não estiver disponível
+                //useMockData();
+            }
+        }
+
+        function useMockData() {
+            contas = [
+                { id: 1, nome: 'Conta Corrente', saldo: 1250.75, pessoaId: 1 },
+                { id: 2, nome: 'Cartão de Crédito', saldo: -830.50, pessoaId: 1 },
+                { id: 3, nome: 'Poupança', saldo: 5400.00, pessoaId: 1 }
+            ];
+            renderCards();
+        }
+
+        function changeView(view) {
+            currentView = view;
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const titles = {
+                contas: '🏦 Contas Bancárias',
+                cartoes: '💳 Cartões de Crédito',
+                poupanca: '💰 Poupança',
+                receitas: '📈 Receitas',
+                despesas: '📉 Despesas'
+            };
+
+            const btnTexts = {
+                contas: 'Adicionar Nova Conta',
+                cartoes: 'Adicionar Novo Cartão',
+                poupanca: 'Adicionar Poupança',
+                receitas: 'Adicionar Receita',
+                despesas: 'Adicionar Despesa'
+            };
+
+            document.getElementById('pageTitle').textContent = titles[view];
+            document.getElementById('btnAddText').textContent = btnTexts[view];
+            renderCards();
+        }
+
+        function renderCards() {
+            const container = document.getElementById('cardsContainer');
+            let items = [];
+
+            switch(currentView) {
+                case 'contas':
+                    items = contas.filter(c => !c.nome.includes('Cartão') && !c.nome.includes('Poupança'));
+                    break;
+                case 'cartoes':
+                    items = cartoes.length > 0 ? cartoes : contas.filter(c => c.nome.includes('Cartão'));
+                    break;
+                case 'poupanca':
+                    items = contas.filter(c => c.nome.includes('Poupança'));
+                    break;
+                case 'receitas':
+                    items = receitas;
+                    break;
+                case 'despesas':
+                    items = despesas;
+                    break;
+            }
+
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>Nenhum item cadastrado</h3>
+                        <p>Clique em "Adicionar" para começar</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = items.map(item => {
+                if (currentView === 'contas' || currentView === 'cartoes' || currentView === 'poupanca') {
+                    return `
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-icon">${currentView === 'contas' ? '40×40' : currentView === 'cartoes' ? '💳' : '💰'}</div>
+                                <div class="card-info">
+                                    <h3>${item.nome || item.descricao}</h3>
+                                    <p>${currentView === 'contas' ? 'NuBank' : currentView === 'cartoes' ? 'Itaú' : 'Caixa Econômica'}</p>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="card-label">${currentView === 'cartoes' ? 'Fatura Atual' : currentView === 'poupanca' ? 'Valor Guardado' : 'Saldo Atual'}</div>
+                                <div class="card-value ${item.saldo >= 0 ? 'positive' : 'negative'}">
+                                    R$ ${Math.abs(item.saldo || item.valorFatura || item.valor || 0).toFixed(2).replace('.', ',')}
+                                </div>
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn btn-edit" onclick="editItem(${item.id})">
+                                    ✏️ Editar
+                                </button>
+                                <button class="btn btn-delete" onclick="deleteItem(${item.id})">
+                                    🗑️ Excluir
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-icon">${currentView === 'receitas' ? '📈' : '📉'}</div>
+                                <div class="card-info">
+                                    <h3>${item.descricao}</h3>
+                                    <p>${item.categoria}</p>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="card-label">Valor</div>
+                                <div class="card-value ${currentView === 'receitas' ? 'positive' : 'negative'}">
+                                    R$ ${(item.valor || 0).toFixed(2).replace('.', ',')}
+                                </div>
+                                <div class="card-label" style="margin-top: 0.5rem;">
+                                    Data: ${new Date(item.dataReceita || item.dataDespesa).toLocaleDateString('pt-BR')}
+                                </div>
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn btn-edit" onclick="editItem(${item.id})">
+                                    ✏️ Editar
+                                </button>
+                                <button class="btn btn-delete" onclick="deleteItem(${item.id})">
+                                    🗑️ Excluir
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            }).join('');
+        }
+
+        function openModal(id = null) {
+            editingId = id;
+            const modal = document.getElementById('modal');
+            const modalTitle = document.getElementById('modalTitle');
+            const formFields = document.getElementById('formFields');
+
+            if (id) {
+                modalTitle.textContent = `Editar ${currentView === 'contas' ? 'Conta' : currentView === 'cartoes' ? 'Cartão' : currentView === 'poupanca' ? 'Poupança' : currentView === 'receitas' ? 'Receita' : 'Despesa'}`;
+            } else {
+                modalTitle.textContent = `Nova ${currentView === 'contas' ? 'Conta' : currentView === 'cartoes' ? 'Cartão' : currentView === 'poupanca' ? 'Poupança' : currentView === 'receitas' ? 'Receita' : 'Despesa'}`;
+            }
+
+            // Gerar campos do formulário baseado na view
+            if (currentView === 'contas' || currentView === 'cartoes' || currentView === 'poupanca') {
+                formFields.innerHTML = `
+                    <div class="form-group">
+                        <label>Nome</label>
+                        <input type="text" id="nome" required>
+                    </div>
+                    ${currentView === 'cartoes' ? `
+                        <div class="form-group">
+                            <label>Limite</label>
+                            <input type="number" step="0.01" id="limite" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Data de Vencimento</label>
+                            <input type="date" id="dataVencimento" required>
+                        </div>
+                    ` : ''}
+                    <div class="form-group">
+                        <label>${currentView === 'cartoes' ? 'Valor da Fatura' : 'Saldo'}</label>
+                        <input type="number" step="0.01" id="saldo" required>
+                    </div>
+                `;
+            } else {
+                formFields.innerHTML = `
+                    <div class="form-group">
+                        <label>Descrição</label>
+                        <input type="text" id="descricao" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Categoria</label>
+                        <input type="text" id="categoria" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Valor</label>
+                        <input type="number" step="0.01" id="valor" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Data</label>
+                        <input type="date" id="data" required>
+                    </div>
+                `;
+            }
+
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+            document.getElementById('mainForm').reset();
+            editingId = null;
+        }
+
+        async function handleSubmit(event) {
+            event.preventDefault();
+
+            // Aqui você implementaria a lógica de envio para a API
+            console.log('Formulário enviado');
+
+            // Exemplo de dados mockados
+            closeModal();
+            alert('Item salvo com sucesso!');
+            loadData();
+        }
+
+        async function editItem(id) {
+            editingId = id;
+            openModal(id);
+            // Aqui você carregaria os dados do item e preencheria o formulário
+        }
+
+        async function deleteItem(id) {
+            if (confirm('Tem certeza que deseja excluir este item?')) {
+                // Aqui você implementaria a lógica de exclusão da API
+                console.log('Excluir item:', id);
+                alert('Item excluído com sucesso!');
+                loadData();
+            }
+        }
+    </script>
+</body>
+</html>

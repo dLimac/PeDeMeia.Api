@@ -1,0 +1,48 @@
+CREATE TABLE Pessoa (
+                        Id INT PRIMARY KEY IDENTITY(1,1),
+                        Nome NVARCHAR(100) NOT NULL,
+                        Cpf NVARCHAR(14) NOT NULL,
+                        ConjugeOuParentesco NVARCHAR(100),
+                        Saldo DECIMAL(18,2) DEFAULT 0
+                    )
+					
+CREATE TABLE Banco (
+                        Id INT PRIMARY KEY IDENTITY(1,1),
+                        Nome NVARCHAR(100) NOT NULL,
+                        Saldo DECIMAL(18,2) DEFAULT 0,
+                        PessoaId INT NOT NULL,
+                        FOREIGN KEY (PessoaId) REFERENCES Pessoa(Id)
+                    )
+					
+CREATE TABLE Cartao (
+                        Id INT PRIMARY KEY IDENTITY(1,1),
+                        Limite DECIMAL(18,2) NOT NULL,
+                        Nome NVARCHAR(100) NOT NULL,
+                        DataVencimentoFatura DATETIME NOT NULL,
+                        ValorFatura DECIMAL(18,2) DEFAULT 0,
+                        PessoaId INT NOT NULL,
+                        FOREIGN KEY (PessoaId) REFERENCES Pessoa(Id)
+                    )
+					
+CREATE TABLE Receita (
+                        Id INT PRIMARY KEY IDENTITY(1,1),
+                        Descricao NVARCHAR(200) NOT NULL,
+                        Categoria NVARCHAR(50) NOT NULL,
+                        Valor DECIMAL(18,2) NOT NULL,
+                        DataReceita DATETIME NOT NULL,
+                        PessoaId INT NOT NULL,
+                        BancoId INT NOT NULL,
+                        FOREIGN KEY (PessoaId) REFERENCES Pessoa(Id),
+                        FOREIGN KEY (BancoId) REFERENCES Banco(Id)
+                    )
+					
+CREATE TABLE Despesa (
+                        Id INT PRIMARY KEY IDENTITY(1,1),
+                        Descricao NVARCHAR(200) NOT NULL,
+                        Categoria NVARCHAR(50) NOT NULL,
+                        Valor DECIMAL(18,2) NOT NULL,
+                        DataDespesa DATETIME NOT NULL,
+                        PessoaId INT NOT NULL,
+                        BancoId INT NOT NULL,
+                        FOREIGN KEY (PessoaId) REFERENCES Pessoa(Id),
+                        FOREIGN KEY (BancoId) REFERENCES Banco(Id)
