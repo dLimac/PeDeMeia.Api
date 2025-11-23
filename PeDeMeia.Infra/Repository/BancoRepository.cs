@@ -1,57 +1,118 @@
-﻿using PeDeMeia.Domain.Entities;
+﻿using System.Data.SqlClient;
+using PeDeMeia.Domain.Entities;
 using PeDeMeia.Infra.Data;
-using System.Data;
 
 namespace PeDeMeia.Infra.Repository
 {
     public class BancoRepository
     {
-        public bool Cadastrar(BancoEntity b)
+        private readonly DatabaseConnection _databaseConnection;
+
+        public BancoRepository(DatabaseConnection databaseConnection)
         {
-           
-            try
-            {
-                using (var banco = new BancoInstance())
-                {
-                    return banco.Banco.ExecuteNonQuery(
-                        @"INSERT INTO Banco (Nome, Saldo, PessoaId) 
-                  VALUES (@nome, @saldo, @pessoaId)",
-                        "@nome", b.Nome,
-                        "@saldo", b.Saldo,
-                        "@pessoaId", b.PessoaId
-                    );
-                }
-            }
-            catch (Exception ex)
-            {
-                // Nunca deixe vazio. Logue ou relance.
-                Console.WriteLine("Erro ao cadastrar banco: " + ex.Message);
-                throw; // ou retorne false, dependendo da lógica.
-            }
+            _databaseConnection = databaseConnection;
         }
 
-
-        #region Metodos Auxiliares
-        private BancoEntity ConvertToObject(DataTable dt)
+        public List<BancoEntity> BuscarTodos()
         {
-            try
+            var bancos = new List<BancoEntity>();
+            using var connection = _databaseConnection.GetOpenConnection();
+            var query = "SELECT Id, Nome, Saldo, PessoaId FROM Banco";
+            using var command = new SqlCommand(query, connection);
+            using var reader = command.ExecuteReader();
+
+            while (reader.Read())
             {
-                if (dt.Rows.Count == 0)
-                    return new BancoEntity();
-                else
+                bancos.Add(new BancoEntity
                 {
-                    return new BancoEntity(
-                        Convert.ToInt32(dt.Rows[0]["Id"]),
-                        dt.Rows[0]["Nome"].ToString(),
-                        decimal.Parse((string)dt.Rows[0]["Saldo"]),
-                        Convert.ToInt32(dt.Rows[0]["PessoaId"]));
-                }
+                    Id = reader.GetInt32(0),
+                    Nome = reader.GetString(1),
+                    Saldo = reader.GetDecimal(2),
+                    PessoaId = reader.GetInt32(3)
+                });
             }
-            catch (Exception e)
-            {
-                return new BancoEntity();
-            }
+            return bancos;
         }
-        #endregion
+
+        public BancoEntity BuscarPorId(int id)
+        {
+            using var connection = _databaseConnection.GetOpenConnection();
+            var query = "SELECT Id, Nome, Saldo, PessoaId FROM Banco WHERE Id = @Id";
+            using var command = new SqlCommand(query, connection);
+            command.Parameters.AddWithValue("@Id", id);
+            using var reader = command.ExecuteReader();
+
+            if (reader.Read())
+            {
+                return new BancoEntity
+                {
+                    Id = reader.GetInt32(0),
+                    Nome = reader.GetString(1),
+                    Saldo = reader.GetDecimal(2),
+                    PessoaId = reader.GetInt32(3)
+                };
+            }
+            return null;
+        }
+
+        public int Cadastrar(BancoEntity banco)
+        {
+            using var connection = _databaseConnection.GetOpenConnection();
+            var query = @"INSERT INTO Banco (Nome, Saldo, PessoaId) 
+                         OUTPUT INSERTED.Id
+                         VALUES (@Nome, @Saldo, @PessoaId)";
+            using var command = new SqlCommand(query, connection);
+            command.Parameters.AddWithValue("@Nome", banco.Nome);
+            command.Parameters.AddWithValue("@Saldo", banco.Saldo);
+            command.Parameters.AddWithValue("@PessoaId", banco.PessoaId);
+
+            return (int)command.ExecuteScalar();
+        }
+
+        public bool Atualizar(int id, BancoEntity banco)
+        {
+            using var connection = _databaseConnection.GetOpenConnection();
+            var query = @"UPDATE Banco SET Nome = @Nome, Saldo = @Saldo, PessoaId = @PessoaId 
+                         WHERE Id = @Id";
+            using var command = new SqlCommand(query, connection);
+            command.Parameters.AddWithValue("@Id", id);
+            command.Parameters.AddWithValue("@Nome", banco.Nome);
+            command.Parameters.AddWithValue("@Saldo", banco.Saldo);
+            command.Parameters.AddWithValue("@PessoaId", banco.PessoaId);
+
+            return command.ExecuteNonQuery() > 0;
+        }
+
+        public bool Deletar(int id)
+        {
+            using var connection = _databaseConnection.GetOpenConnection();
+            var query = "DELETE FROM Banco WHERE Id = @Id";
+            using var command = new SqlCommand(query, connection);
+            command.Parameters.AddWithValue("@Id", id);
+
+            return command.ExecuteNonQuery() > 0;
+        }
+
+        public List<BancoEntity> BuscarPorPessoa(int pessoaId)
+        {
+            var bancos = new List<BancoEntity>();
+            using var connection = _databaseConnection.GetOpenConnection();
+            var query = "SELECT Id, Nome, Saldo, PessoaId FROM Banco WHERE PessoaId = @PessoaId";
+            using var command = new SqlCommand(query, connection);
+            command.Parameters.AddWithValue("@PessoaId", pessoaId);
+            using var reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                bancos.Add(new BancoEntity
+                {
+                    Id = reader.GetInt32(0),
+                    Nome = reader.GetString(1),
+                    Saldo = reader.GetDecimal(2),
+                    PessoaId = reader.GetInt32(3)
+                });
+            }
+            return bancos;
+        }
     }
 }

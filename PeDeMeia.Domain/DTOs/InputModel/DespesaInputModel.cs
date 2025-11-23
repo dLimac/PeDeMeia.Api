@@ -11,8 +11,8 @@ namespace PeDeMeia.Domain.DTOs.InputModel
         public string Descricao { get; set; }
         public string Categoria { get; set; }
         public decimal Valor { get; set; }
-        public int PessoaId { get; set; }
         public DateTime DataDespesa { get; set; }
-        public int ContaBancariaId { get; set; }
+        public int PessoaId { get; set; }
+        public int BancoId { get; set; }
     }
 }

@@ -8,24 +8,54 @@ namespace PeDeMeia.Domain.Entities
 {
     public class DespesaEntity
     {
-        public int Id { get; private set; }
-        public string Descricao { get; private set; }
-        public string Categoria { get; private set; }
-        public decimal Valor { get; private set; }
-        public int PessoaId { get; private set; }
-        public DateTime DataDespesa { get; private set; }
-        public int ContaBancariaId { get; private set; }
-        public DespesaEntity() { }
+        private int _id;
+        private string _descricao;
+        private string _categoria;
+        private decimal _valor;
+        private DateTime _dataDespesa;
+        private int _pessoaId;
+        private int _bancoId;
 
-        public DespesaEntity(int id, string descricao, string categoria, decimal valor, int pessoaId, DateTime dataDespesa, int contaBancariaId)
+        public int Id
         {
-            Id = id;
-            Descricao = descricao;
-            Categoria = categoria;
-            Valor = valor;
-            PessoaId = pessoaId;
-            DataDespesa = dataDespesa;
-            ContaBancariaId = contaBancariaId;
+            get => _id;
+            set => _id = value;
+        }
+
+        public string Descricao
+        {
+            get => _descricao;
+            set => _descricao = value;
+        }
+
+        public string Categoria
+        {
+            get => _categoria;
+            set => _categoria = value;
+        }
+
+        public decimal Valor
+        {
+            get => _valor;
+            set => _valor = value;
+        }
+
+        public DateTime DataDespesa
+        {
+            get => _dataDespesa;
+            set => _dataDespesa = value;
+        }
+
+        public int PessoaId
+        {
+            get => _pessoaId;
+            set => _pessoaId = value;
+        }
+
+        public int BancoId
+        {
+            get => _bancoId;
+            set => _bancoId = value;
         }
     }
 }

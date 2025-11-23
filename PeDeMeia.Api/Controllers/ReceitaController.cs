@@ -1,23 +1,82 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using PeDeMeia.API.FluentValidation;
 using PeDeMeia.Domain.DTOs.InputModel;
-using PeDeMeia.Domain.Entities;
-using PeDeMeia.Service.ReceitaService;
+using PeDeMeia.Service;
 
-namespace PeDeMeia.Api.Controllers
+namespace PeDeMeia.API.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     public class ReceitaController : ControllerBase
     {
+        private readonly ReceitaService _receitaService;
 
-        [HttpPost("/receita/cadastro")]
-        public bool CadastrarReceita(ReceitaInputModel model)
-            => new CadastroReceitaService().CadastroReceita(model);
+        public ReceitaController(ReceitaService receitaService)
+        {
+            _receitaService = receitaService;
+        }
 
-        [HttpGet("/receitas")]
-        public ReceitaEntity ObterTodos()
-            => new BuscaReceitaService().ObterTodos();
+        [HttpGet]
+        public IActionResult BuscarTodos()
+        {
+            var receitas = _receitaService.BuscarTodos();
+            return Ok(receitas);
+        }
 
-        [HttpGet("/receita")]
-        public ReceitaEntity ObterPorCategoria(string categoria)
-            => new BuscaReceitaService().ObterPorCategoria(categoria);
+        [HttpGet("{id}")]
+        public IActionResult BuscarPorId(int id)
+        {
+            var receita = _receitaService.BuscarPorId(id);
+            if (receita == null)
+                return NotFound();
+
+            return Ok(receita);
+        }
+
+        [HttpGet("pessoa/{pessoaId}")]
+        public IActionResult BuscarPorPessoa(int pessoaId)
+        {
+            var receitas = _receitaService.BuscarPorPessoa(pessoaId);
+            return Ok(receitas);
+        }
+
+        [HttpPost]
+        public IActionResult Cadastrar([FromBody] ReceitaInputModel inputModel)
+        {
+            var validator = new ReceitaValidator();
+            var validationResult = validator.Validate(inputModel);
+
+            if (!validationResult.IsValid)
+                return BadRequest(validationResult.Errors);
+
+            var id = _receitaService.Cadastrar(inputModel);
+            return CreatedAtAction(nameof(BuscarPorId), new { id }, null);
+        }
+
+        [HttpPut("{id}")]
+        public IActionResult Atualizar(int id, [FromBody] ReceitaInputModel inputModel)
+        {
+            var validator = new ReceitaValidator();
+            var validationResult = validator.Validate(inputModel);
+
+            if (!validationResult.IsValid)
+                return BadRequest(validationResult.Errors);
+
+            var result = _receitaService.Atualizar(id, inputModel);
+            if (!result)
+                return NotFound();
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult Deletar(int id)
+        {
+            var result = _receitaService.Deletar(id);
+            if (!result)
+                return NotFound();
+
+            return NoContent();
+        }
     }
 }

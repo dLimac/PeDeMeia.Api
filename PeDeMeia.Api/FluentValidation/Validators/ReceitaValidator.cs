@@ -1,15 +1,15 @@
 ﻿using FluentValidation;
 using PeDeMeia.Domain.DTOs.InputModel;
 
-namespace PeDeMeia.Api.FluentValidation.Validators
+namespace PeDeMeia.API.FluentValidation
 {
-    public class DespesaInputModelValidator : AbstractValidator<DespesaInputModel>
+    public class ReceitaValidator : AbstractValidator<ReceitaInputModel>
     {
-        public DespesaInputModelValidator()
+        public ReceitaValidator()
         {
             RuleFor(x => x.Descricao)
-                    .NotEmpty().WithMessage("Descrição é obrigatória")
-                    .MaximumLength(200).WithMessage("Descrição deve ter no máximo 200 caracteres");
+                .NotEmpty().WithMessage("Descrição é obrigatória")
+                .MaximumLength(200).WithMessage("Descrição deve ter no máximo 200 caracteres");
 
             RuleFor(x => x.Categoria)
                 .NotEmpty().WithMessage("Categoria é obrigatória")
@@ -18,11 +18,14 @@ namespace PeDeMeia.Api.FluentValidation.Validators
             RuleFor(x => x.Valor)
                 .GreaterThan(0).WithMessage("Valor deve ser maior que zero");
 
-            RuleFor(x => x.DataDespesa)
-                .NotEmpty().WithMessage("Data da despesa é obrigatória");
+            RuleFor(x => x.DataReceita)
+                .NotEmpty().WithMessage("Data da receita é obrigatória");
 
             RuleFor(x => x.PessoaId)
                 .GreaterThan(0).WithMessage("ID da pessoa inválido");
+
+            RuleFor(x => x.BancoId)
+                .GreaterThan(0).WithMessage("ID do banco inválido");
         }
     }
 }

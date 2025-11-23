@@ -8,19 +8,33 @@ namespace PeDeMeia.Domain.Entities
 {
     public class BancoEntity
     {
-        public int Id { get; private set; }
-        public string Nome { get; private set; }
-        public decimal Saldo { get; private set; }
-        public int PessoaId { get; private set; }
+        private int _id;
+        private string _nome;
+        private decimal _saldo;
+        private int _pessoaId;
 
-        public BancoEntity() { }
-
-        public BancoEntity(int id, string nome, decimal saldo, int pessoaId)
+        public int Id
         {
-            Id = id;
-            Nome = nome;
-            Saldo = saldo;
-            PessoaId = pessoaId;
+            get => _id;
+            set => _id = value;
+        }
+
+        public string Nome
+        {
+            get => _nome;
+            set => _nome = value;
+        }
+
+        public decimal Saldo
+        {
+            get => _saldo;
+            set => _saldo = value;
+        }
+
+        public int PessoaId
+        {
+            get => _pessoaId;
+            set => _pessoaId = value;
         }
     }
 }

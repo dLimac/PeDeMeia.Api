@@ -329,6 +329,22 @@
             .empty-state p {
                 opacity: 0.8;
             }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+
+        .alert-success {
+            background: #d3f9d8;
+            color: #2b8a3e;
+        }
+
+        .alert-error {
+            background: #ffe3e3;
+            color: #c92a2a;
+        }
     </style>
 </head>
 <body>
@@ -337,14 +353,11 @@
             <div class="logo-img">🧦</div>
             <h1>Pé de Meia</h1>
         </div>
-        <div class="menu-item active" onclick="changeView('contas')">
+        <div class="menu-item active" onclick="changeView('pessoas')">
+            👤 Pessoas
+        </div>
+        <div class="menu-item" onclick="changeView('contas')">
             🏦 Contas Bancárias
-        </div>
-        <div class="menu-item" onclick="changeView('cartoes')">
-            💳 Cartões
-        </div>
-        <div class="menu-item" onclick="changeView('poupanca')">
-            💰 Poupança
         </div>
         <div class="menu-item" onclick="changeView('receitas')">
             📈 Receitas
@@ -356,21 +369,21 @@
 
     <div class="main-content">
         <div class="header">
-            <h2 id="pageTitle">🏦 Contas Bancárias</h2>
+            <h2 id="pageTitle">👤 Pessoas</h2>
             <button class="btn-add" onclick="openModal()">
                 <span>+</span>
-                <span id="btnAddText">Adicionar Nova Conta</span>
+                <span id="btnAddText">Adicionar Pessoa</span>
             </button>
         </div>
 
+        <div id="alertContainer"></div>
         <div id="cardsContainer" class="cards-container"></div>
     </div>
 
-    <!-- Modal -->
     <div class="modal" id="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="modalTitle">Nova Conta</h3>
+                <h3 id="modalTitle">Nova Pessoa</h3>
                 <button class="btn-close" onclick="closeModal()">×</button>
             </div>
             <form id="mainForm" onsubmit="handleSubmit(event)">
@@ -378,51 +391,45 @@
                 <div class="form-actions">
                     <button type="button" class="btn-cancel" onclick="closeModal()">Cancelar</button>
                     <button type="submit" class="btn-submit">Salvar</button>
+                </div>
             </form>
         </div>
     </div>
-    </div>
 
     <script>
-        const API_URL = 'https://pisenac.runasp.net/'; // Ajuste conforme sua API
-        let currentView = 'contas';
+        const API_URL = 'https://pisenac.runasp.net/api';
+        let currentView = 'pessoas';
         let editingId = null;
-        let contas = [];
-        let cartoes = [];
-        let poupancas = [];
+        let pessoas = [];
+        let bancos = [];
         let receitas = [];
         let despesas = [];
 
-        // Inicializar
         document.addEventListener('DOMContentLoaded', () => {
             loadData();
         });
 
         async function loadData() {
             try {
-                const [receitasRes, despesasRes] = await Promise.all([
-                    fetch(`${API_URL}/receitas`),
-                    fetch(`${API_URL}/despesas`)
+                // Carrega todos os dados em paralelo
+                const [pessoasRes, bancosRes, receitasRes, despesasRes] = await Promise.all([
+                    fetch(`${API_URL}/Pessoa`),
+                    fetch(`${API_URL}/Banco`),
+                    fetch(`${API_URL}/Receita`),
+                    fetch(`${API_URL}/Despesa`)
                 ]);
 
+                // Converte para JSON
+                pessoas = await pessoasRes.json();
+                bancos = await bancosRes.json();
                 receitas = await receitasRes.json();
                 despesas = await despesasRes.json();
 
                 renderCards();
             } catch (error) {
                 console.error('Erro ao carregar dados:', error);
-                // Usar dados de exemplo se a API não estiver disponível
-                //useMockData();
+                showAlert('Erro ao carregar dados. Verifique o console (F12).', 'error');
             }
-        }
-
-        function useMockData() {
-            contas = [
-                { id: 1, nome: 'Conta Corrente', saldo: 1250.75, pessoaId: 1 },
-                { id: 2, nome: 'Cartão de Crédito', saldo: -830.50, pessoaId: 1 },
-                { id: 3, nome: 'Poupança', saldo: 5400.00, pessoaId: 1 }
-            ];
-            renderCards();
         }
 
         function changeView(view) {
@@ -431,17 +438,15 @@
             event.target.classList.add('active');
 
             const titles = {
+                pessoas: '👤 Pessoas',
                 contas: '🏦 Contas Bancárias',
-                cartoes: '💳 Cartões de Crédito',
-                poupanca: '💰 Poupança',
                 receitas: '📈 Receitas',
                 despesas: '📉 Despesas'
             };
 
             const btnTexts = {
-                contas: 'Adicionar Nova Conta',
-                cartoes: 'Adicionar Novo Cartão',
-                poupanca: 'Adicionar Poupança',
+                pessoas: 'Adicionar Pessoa',
+                contas: 'Adicionar Conta',
                 receitas: 'Adicionar Receita',
                 despesas: 'Adicionar Despesa'
             };
@@ -455,90 +460,100 @@
             const container = document.getElementById('cardsContainer');
             let items = [];
 
-            switch(currentView) {
-                case 'contas':
-                    items = contas.filter(c => !c.nome.includes('Cartão') && !c.nome.includes('Poupança'));
-                    break;
-                case 'cartoes':
-                    items = cartoes.length > 0 ? cartoes : contas.filter(c => c.nome.includes('Cartão'));
-                    break;
-                case 'poupanca':
-                    items = contas.filter(c => c.nome.includes('Poupança'));
-                    break;
-                case 'receitas':
-                    items = receitas;
-                    break;
-                case 'despesas':
-                    items = despesas;
-                    break;
+            switch (currentView) {
+                case 'pessoas': items = pessoas; break;
+                case 'contas': items = bancos; break;
+                case 'receitas': items = receitas; break;
+                case 'despesas': items = despesas; break;
             }
 
-            if (items.length === 0) {
+            if (!items || items.length === 0) {
                 container.innerHTML = `
-                    <div class="empty-state">
-                        <h3>Nenhum item cadastrado</h3>
-                        <p>Clique em "Adicionar" para começar</p>
-                    </div>
-                `;
+                                <div class="empty-state">
+                                    <h3>Nenhum item cadastrado</h3>
+                                    <p>Clique em "Adicionar" para começar</p>
+                                </div>
+                            `;
                 return;
             }
 
             container.innerHTML = items.map(item => {
-                if (currentView === 'contas' || currentView === 'cartoes' || currentView === 'poupanca') {
+                if (currentView === 'pessoas') {
                     return `
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-icon">${currentView === 'contas' ? '40×40' : currentView === 'cartoes' ? '💳' : '💰'}</div>
-                                <div class="card-info">
-                                    <h3>${item.nome || item.descricao}</h3>
-                                    <p>${currentView === 'contas' ? 'NuBank' : currentView === 'cartoes' ? 'Itaú' : 'Caixa Econômica'}</p>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="card-label">${currentView === 'cartoes' ? 'Fatura Atual' : currentView === 'poupanca' ? 'Valor Guardado' : 'Saldo Atual'}</div>
-                                <div class="card-value ${item.saldo >= 0 ? 'positive' : 'negative'}">
-                                    R$ ${Math.abs(item.saldo || item.valorFatura || item.valor || 0).toFixed(2).replace('.', ',')}
-                                </div>
-                            </div>
-                            <div class="card-actions">
-                                <button class="btn btn-edit" onclick="editItem(${item.id})">
-                                    ✏️ Editar
-                                </button>
-                                <button class="btn btn-delete" onclick="deleteItem(${item.id})">
-                                    🗑️ Excluir
-                                </button>
-                            </div>
-                        </div>
-                    `;
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <div class="card-icon">👤</div>
+                                            <div class="card-info">
+                                                <h3>${item.nome}</h3>
+                                                <p>CPF: ${item.cpf}</p>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="card-label">Cônjuge/Parentesco</div>
+                                            <p style="margin-bottom: 1rem;">${item.conjugeOuParentesco || 'Não informado'}</p>
+                                            <div class="card-label">Saldo</div>
+                                            <div class="card-value positive">
+                                                R$ ${(item.saldo || 0).toFixed(2).replace('.', ',')}
+                                            </div>
+                                        </div>
+                                        <div class="card-actions">
+                                            <button class="btn btn-edit" onclick="editItem(${item.id})">✏️ Editar</button>
+                                            <button class="btn btn-delete" onclick="deleteItem(${item.id})">🗑️ Excluir</button>
+                                        </div>
+                                    </div>
+                                `;
+                } else if (currentView === 'contas') {
+                    const pessoa = pessoas.find(p => p.id === item.pessoaId);
+                    return `
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <div class="card-icon">🏦</div>
+                                            <div class="card-info">
+                                                <h3>${item.nome}</h3>
+                                                <p>${pessoa ? pessoa.nome : 'Pessoa não encontrada'}</p>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="card-label">Saldo Atual</div>
+                                            <div class="card-value ${item.saldo >= 0 ? 'positive' : 'negative'}">
+                                                R$ ${Math.abs(item.saldo || 0).toFixed(2).replace('.', ',')}
+                                            </div>
+                                        </div>
+                                        <div class="card-actions">
+                                            <button class="btn btn-edit" onclick="editItem(${item.id})">✏️ Editar</button>
+                                            <button class="btn btn-delete" onclick="deleteItem(${item.id})">🗑️ Excluir</button>
+                                        </div>
+                                    </div>
+                                `;
                 } else {
+                    // Receitas e Despesas
+                    const pessoa = pessoas.find(p => p.id === item.pessoaId);
+                    const banco = bancos.find(b => b.id === item.bancoId);
+                    const dataFormatada = new Date(item.dataReceita || item.dataDespesa).toLocaleDateString('pt-BR');
                     return `
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-icon">${currentView === 'receitas' ? '📈' : '📉'}</div>
-                                <div class="card-info">
-                                    <h3>${item.descricao}</h3>
-                                    <p>${item.categoria}</p>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="card-label">Valor</div>
-                                <div class="card-value ${currentView === 'receitas' ? 'positive' : 'negative'}">
-                                    R$ ${(item.valor || 0).toFixed(2).replace('.', ',')}
-                                </div>
-                                <div class="card-label" style="margin-top: 0.5rem;">
-                                    Data: ${new Date(item.dataReceita || item.dataDespesa).toLocaleDateString('pt-BR')}
-                                </div>
-                            </div>
-                            <div class="card-actions">
-                                <button class="btn btn-edit" onclick="editItem(${item.id})">
-                                    ✏️ Editar
-                                </button>
-                                <button class="btn btn-delete" onclick="deleteItem(${item.id})">
-                                    🗑️ Excluir
-                                </button>
-                            </div>
-                        </div>
-                    `;
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <div class="card-icon">${currentView === 'receitas' ? '📈' : '📉'}</div>
+                                            <div class="card-info">
+                                                <h3>${item.descricao}</h3>
+                                                <p>${item.categoria}</p>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="card-label">Pessoa: ${pessoa ? pessoa.nome : 'N/A'}</div>
+                                            <div class="card-label">Banco: ${banco ? banco.nome : 'N/A'}</div>
+                                            <div class="card-label">Valor</div>
+                                            <div class="card-value ${currentView === 'receitas' ? 'positive' : 'negative'}">
+                                                R$ ${(item.valor || 0).toFixed(2).replace('.', ',')}
+                                            </div>
+                                            <div class="card-label" style="margin-top: 0.5rem;">Data: ${dataFormatada}</div>
+                                        </div>
+                                        <div class="card-actions">
+                                            <button class="btn btn-edit" onclick="editItem(${item.id})">✏️ Editar</button>
+                                            <button class="btn btn-delete" onclick="deleteItem(${item.id})">🗑️ Excluir</button>
+                                        </div>
+                                    </div>
+                                `;
                 }
             }).join('');
         }
@@ -549,53 +564,92 @@
             const modalTitle = document.getElementById('modalTitle');
             const formFields = document.getElementById('formFields');
 
-            if (id) {
-                modalTitle.textContent = `Editar ${currentView === 'contas' ? 'Conta' : currentView === 'cartoes' ? 'Cartão' : currentView === 'poupanca' ? 'Poupança' : currentView === 'receitas' ? 'Receita' : 'Despesa'}`;
-            } else {
-                modalTitle.textContent = `Nova ${currentView === 'contas' ? 'Conta' : currentView === 'cartoes' ? 'Cartão' : currentView === 'poupanca' ? 'Poupança' : currentView === 'receitas' ? 'Receita' : 'Despesa'}`;
-            }
+            const titles = {
+                pessoas: id ? 'Editar Pessoa' : 'Nova Pessoa',
+                contas: id ? 'Editar Conta' : 'Nova Conta',
+                receitas: id ? 'Editar Receita' : 'Nova Receita',
+                despesas: id ? 'Editar Despesa' : 'Nova Despesa'
+            };
 
-            // Gerar campos do formulário baseado na view
-            if (currentView === 'contas' || currentView === 'cartoes' || currentView === 'poupanca') {
+            modalTitle.textContent = titles[currentView];
+
+            if (currentView === 'pessoas') {
+                const pessoa = id ? pessoas.find(p => p.id === id) : null;
                 formFields.innerHTML = `
-                    <div class="form-group">
-                        <label>Nome</label>
-                        <input type="text" id="nome" required>
-                    </div>
-                    ${currentView === 'cartoes' ? `
-                        <div class="form-group">
-                            <label>Limite</label>
-                            <input type="number" step="0.01" id="limite" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Data de Vencimento</label>
-                            <input type="date" id="dataVencimento" required>
-                        </div>
-                    ` : ''}
-                    <div class="form-group">
-                        <label>${currentView === 'cartoes' ? 'Valor da Fatura' : 'Saldo'}</label>
-                        <input type="number" step="0.01" id="saldo" required>
-                    </div>
-                `;
-            } else {
+                                <div class="form-group">
+                                    <label>Nome *</label>
+                                    <input type="text" id="nome" value="${pessoa ? pessoa.nome : ''}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>CPF * (Somente números)</label>
+                                    <input type="text" id="cpf" value="${pessoa ? pessoa.cpf : ''}" maxlength="14" placeholder="000.000.000-00" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Cônjuge ou Parentesco</label>
+                                    <input type="text" id="conjugeOuParentesco" value="${pessoa ? (pessoa.conjugeOuParentesco || '') : ''}">
+                                </div>
+                                <div class="form-group">
+                                    <label>Saldo Inicial *</label>
+                                    <input type="number" step="0.01" id="saldo" value="${pessoa ? pessoa.saldo : 0}" required>
+                                </div>
+                            `;
+            } else if (currentView === 'contas') {
+                const banco = id ? bancos.find(b => b.id === id) : null;
                 formFields.innerHTML = `
-                    <div class="form-group">
-                        <label>Descrição</label>
-                        <input type="text" id="descricao" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Categoria</label>
-                        <input type="text" id="categoria" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Valor</label>
-                        <input type="number" step="0.01" id="valor" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Data</label>
-                        <input type="date" id="data" required>
-                    </div>
-                `;
+                                <div class="form-group">
+                                    <label>Pessoa *</label>
+                                    <select id="pessoaId" required>
+                                        <option value="">Selecione uma pessoa</option>
+                                        ${pessoas.map(p => `<option value="${p.id}" ${banco && banco.pessoaId === p.id ? 'selected' : ''}>${p.nome}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Nome da Conta *</label>
+                                    <input type="text" id="nome" value="${banco ? banco.nome : ''}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Saldo Inicial *</label>
+                                    <input type="number" step="0.01" id="saldo" value="${banco ? banco.saldo : 0}" required>
+                                </div>
+                            `;
+            } else if (currentView === 'receitas' || currentView === 'despesas') {
+                const isReceita = currentView === 'receitas';
+                const item = id ? (isReceita ? receitas.find(r => r.id === id) : despesas.find(d => d.id === id)) : null;
+                const dataValue = item ? (isReceita ? item.dataReceita : item.dataDespesa) : new Date().toISOString();
+
+                formFields.innerHTML = `
+                                <div class="form-group">
+                                    <label>Pessoa *</label>
+                                    <select id="pessoaId" required>
+                                        <option value="">Selecione uma pessoa</option>
+                                        ${pessoas.map(p => `<option value="${p.id}" ${item && item.pessoaId === p.id ? 'selected' : ''}>${p.nome}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Banco *</label>
+                                    <select id="bancoId" required>
+                                        <option value="">Selecione um banco</option>
+                                        ${bancos.map(b => `<option value="${b.id}" ${item && item.bancoId === b.id ? 'selected' : ''}>${b.nome}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Descrição *</label>
+                                    <input type="text" id="descricao" value="${item ? item.descricao : ''}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Categoria *</label>
+                                    <input type="text" id="categoria" value="${item ? item.categoria : ''}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Valor *</label>
+                                    <input type="number" step="0.01" id="valor" value="${item ? item.valor : ''}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Data *</label>
+                                    <input type="date" id="${isReceita ? 'dataReceita' : 'dataDespesa'}"
+                                           value="${dataValue.split('T')[0]}" required>
+                                </div>
+                            `;
             }
 
             modal.classList.add('active');
@@ -610,28 +664,147 @@
         async function handleSubmit(event) {
             event.preventDefault();
 
-            // Aqui você implementaria a lógica de envio para a API
-            console.log('Formulário enviado');
+            let data = {};
+            let endpoint = '';
+            let method = editingId ? 'PUT' : 'POST';
+            let url = '';
 
-            // Exemplo de dados mockados
-            closeModal();
-            alert('Item salvo com sucesso!');
-            loadData();
+            // Helpers para limpar dados e converter tipos
+            const getFloat = (id) => {
+                const val = document.getElementById(id).value;
+                return val ? parseFloat(val) : 0;
+            };
+
+            const getInt = (id) => {
+                const val = document.getElementById(id).value;
+                return val ? parseInt(val) : 0;
+            };
+
+            const cleanCpf = (cpf) => cpf.replace(/\D/g, '');
+
+            if (currentView === 'pessoas') {
+                data = {
+                    id: editingId || 0,
+                    nome: document.getElementById('nome').value,
+                    cpf: cleanCpf(document.getElementById('cpf').value),
+                    conjugeOuParentesco: document.getElementById('conjugeOuParentesco').value || null,
+                    saldo: getFloat('saldo')
+                };
+                endpoint = 'Pessoa';
+            } else if (currentView === 'contas') {
+                data = {
+                    id: editingId || 0,
+                    nome: document.getElementById('nome').value,
+                    saldo: getFloat('saldo'),
+                    pessoaId: getInt('pessoaId')
+                };
+                endpoint = 'Banco';
+            } else if (currentView === 'receitas') {
+                data = {
+                    id: editingId || 0,
+                    descricao: document.getElementById('descricao').value,
+                    categoria: document.getElementById('categoria').value,
+                    valor: getFloat('valor'),
+                    dataReceita: document.getElementById('dataReceita').value,
+                    pessoaId: getInt('pessoaId'),
+                    bancoId: getInt('bancoId')
+                };
+                endpoint = 'Receita';
+            } else if (currentView === 'despesas') {
+                data = {
+                    id: editingId || 0,
+                    descricao: document.getElementById('descricao').value,
+                    categoria: document.getElementById('categoria').value,
+                    valor: getFloat('valor'),
+                    dataDespesa: document.getElementById('dataDespesa').value,
+                    pessoaId: getInt('pessoaId'),
+                    bancoId: getInt('bancoId')
+                };
+                endpoint = 'Despesa';
+            }
+
+            url = editingId ? `${API_URL}/${endpoint}/${editingId}` : `${API_URL}/${endpoint}`;
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    showAlert(editingId ? 'Item atualizado com sucesso!' : 'Item cadastrado com sucesso!', 'success');
+                    closeModal();
+                    await loadData();
+                } else {
+                    // Tenta ler o erro como texto para não quebrar o JSON
+                    const errorText = await response.text();
+                    let errorMessage = errorText;
+
+                    try {
+                        // Tenta formatar se for JSON
+                        const errorJson = JSON.parse(errorText);
+                        errorMessage = errorJson.title || JSON.stringify(errorJson.errors) || errorText;
+                    } catch (e) { }
+
+                    console.error("Erro API:", errorMessage);
+                    showAlert('Erro ao salvar: ' + errorMessage, 'error');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showAlert('Erro de comunicação. Verifique o console.', 'error');
+            }
         }
 
         async function editItem(id) {
             editingId = id;
             openModal(id);
-            // Aqui você carregaria os dados do item e preencheria o formulário
         }
 
         async function deleteItem(id) {
-            if (confirm('Tem certeza que deseja excluir este item?')) {
-                // Aqui você implementaria a lógica de exclusão da API
-                console.log('Excluir item:', id);
-                alert('Item excluído com sucesso!');
-                loadData();
+            if (!confirm('Tem certeza que deseja excluir este item?')) {
+                return;
             }
+
+            let endpoint = '';
+            switch (currentView) {
+                case 'pessoas': endpoint = 'Pessoa'; break;
+                case 'contas': endpoint = 'Banco'; break;
+                case 'receitas': endpoint = 'Receita'; break;
+                case 'despesas': endpoint = 'Despesa'; break;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/${endpoint}/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showAlert('Item excluído com sucesso!', 'success');
+                    await loadData();
+                } else {
+                    const txt = await response.text();
+                    showAlert('Erro ao excluir: ' + txt, 'error');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showAlert('Erro ao comunicar com o servidor', 'error');
+            }
+        }
+
+        function showAlert(message, type) {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            container.appendChild(alert);
+
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
         }
     </script>
 </body>

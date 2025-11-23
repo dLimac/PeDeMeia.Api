@@ -1,15 +1,15 @@
 ﻿using FluentValidation;
 using PeDeMeia.Domain.DTOs.InputModel;
 
-namespace PeDeMeia.Api.FluentValidation.Validators
+namespace PeDeMeia.API.FluentValidation
 {
-    public class BancoInputModelValidator : AbstractValidator<BancoInputModel>
+    public class BancoValidator : AbstractValidator<BancoInputModel>
     {
-        public BancoInputModelValidator() 
+        public BancoValidator()
         {
             RuleFor(x => x.Nome)
-                    .NotEmpty().WithMessage("Nome do banco é obrigatório")
-                    .MaximumLength(100).WithMessage("Nome deve ter no máximo 100 caracteres");
+                .NotEmpty().WithMessage("Nome do banco é obrigatório")
+                .MaximumLength(100).WithMessage("Nome deve ter no máximo 100 caracteres");
 
             RuleFor(x => x.Saldo)
                 .GreaterThanOrEqualTo(0).WithMessage("Saldo não pode ser negativo");
